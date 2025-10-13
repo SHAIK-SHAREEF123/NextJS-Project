@@ -84,7 +84,7 @@ export async function GET(request: Request) {
       );
     }
     return NextResponse.json(
-      { success: true, isAcceptingMessages: foundUser.isAcceptingMessage },
+      { success: true, message: "Accepting Message", isAcceptingMessage: foundUser.isAcceptingMessage },
       { status: 200 }
     );
   } catch (error) {

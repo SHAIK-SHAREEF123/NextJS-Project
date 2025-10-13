@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
@@ -17,8 +18,10 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {toast} from "sonner";
 import { signInSchema } from '@/Schemas/signInSchema';
+import { Loader2 } from 'lucide-react';
 
 export default function SignInForm() {
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
 
   const form = useForm<z.infer<typeof signInSchema>>({
@@ -30,6 +33,7 @@ export default function SignInForm() {
   });
 
   const onSubmit = async (data: z.infer<typeof signInSchema>) => {
+    setIsSubmitting(true);
     const result = await signIn('credentials', {
       redirect: false,
       identifier: data.identifier,
@@ -51,6 +55,7 @@ export default function SignInForm() {
     if (result?.url) {
       router.replace('/dashboard');
     }
+    setIsSubmitting(false);
   };
 
   return (
@@ -86,7 +91,16 @@ export default function SignInForm() {
                 </FormItem>
               )}
             />
-            <Button className='w-full' type="submit">Sign In</Button>
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+                          {isSubmitting ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              Please wait
+                            </>
+                          ) : (
+                            'Sign in'
+                          )}
+                        </Button>
           </form>
         </Form>
         <div className="text-center mt-4">
