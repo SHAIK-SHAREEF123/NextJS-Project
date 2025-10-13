@@ -3,7 +3,7 @@ import { streamText } from "ai";
 
 export const maxDuration = 30;
 
-export async function POST(req: Request) {
+export async function POST(_req: Request) {
   try {
     const prompt = `Create a list of three open-ended and engaging questions formatted as a single string. 
 Each question should be separated by '||'. These questions are for an anonymous social messaging platform, like Qooh.me, 

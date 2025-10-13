@@ -1,10 +1,9 @@
-// src/app/api/auth/[...nextauth]/options.ts
-
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import dbConnect from "@/lib/dbConnect";
 import UserModel from "@/model/User";
+import { User } from 'next-auth';
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -15,7 +14,7 @@ export const authOptions: NextAuthOptions = {
         identifier: { label: "Email or Username", type: "text" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(credentials: any): Promise<any> {
+      async authorize(credentials: { identifier: string; password: string }): Promise<User | null> {
         await dbConnect();
         const user = await UserModel.findOne({
           $or: [
