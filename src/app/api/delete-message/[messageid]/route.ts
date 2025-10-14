@@ -1,29 +1,50 @@
 import dbConnect from "@/lib/dbConnect";
 import UserModel from "@/model/User";
-import { getServerSession, User } from "next-auth";
+import { getServerSession } from "next-auth";
 import { authOptions } from "../../auth/[...nextauth]/options";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function DELETE(request: Request, {params}: {params: {messageid: string}}) {
-    const messageId = params.messageid;
-    await dbConnect();
-    const session = await getServerSession(authOptions);
-    const user: User = session?.user as User;
+export async function DELETE(req: NextRequest) {
+  // Extract messageid from URL
+  const url = new URL(req.url);
+  const segments = url.pathname.split("/"); // ["", "api", "delete-message", "messageid"]
+  const messageid = segments[segments.length - 1];
 
-    if(!session || !session.user) {
-        return NextResponse.json({success: false,message: "Not Authenticated"},{status: 401})
+  await dbConnect();
+
+  const session = await getServerSession(authOptions);
+
+  if (!session || !session.user) {
+    return NextResponse.json(
+      { success: false, message: "Not authenticated" },
+      { status: 401 }
+    );
+  }
+
+  const user = session.user;
+
+  try {
+    const updatedResult = await UserModel.updateOne(
+      { _id: user._id },
+      { $pull: { messages: { _id: messageid } } }
+    );
+
+    if (updatedResult.modifiedCount === 0) {
+      return NextResponse.json(
+        { success: false, message: "Message not found or already deleted" },
+        { status: 404 }
+      );
     }
 
-    try {
-        const updatedResult = await UserModel.updateOne({_id: user._id}, {$pull: {messages: {_id: messageId}}})
-        if(updatedResult.modifiedCount == 0) {
-            return NextResponse.json({success: false, message: "Message not found or Message already deleted"},{status: 404})
-        }
-        return NextResponse.json({success: true, message: "Message Deleted Successfully"},{status: 200});
-    } catch (error) {
-        console.error("Error occur during deleting a message",error);
-        return NextResponse.json({success: false, message: "Error deleting Message"},{status: 500});
-        
-    }
-    
+    return NextResponse.json(
+      { success: true, message: "Message deleted successfully" },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("Error deleting message:", error);
+    return NextResponse.json(
+      { success: false, message: "Error deleting message" },
+      { status: 500 }
+    );
+  }
 }
